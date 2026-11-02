@@ -118,4 +118,50 @@ public class NominatimClient {
         // Return matching curated locations if any, otherwise empty list
         return matches;
     }
+
+    public Optional<LocationSearchDto> reverseGeocode(double lat, double lon) {
+        try {
+            String url = UriComponentsBuilder.fromHttpUrl(nominatimBaseUrl + "/reverse")
+                    .queryParam("lat", lat)
+                    .queryParam("lon", lon)
+                    .queryParam("format", "json")
+                    .queryParam("addressdetails", "1")
+                    .toUriString();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("User-Agent", "RouteWise-App/1.0 (contact@routewise.dev)");
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                JsonNode root = objectMapper.readTree(response.getBody());
+                if (!root.has("error")) {
+                    String placeId = root.path("place_id").asText("rev-" + System.currentTimeMillis());
+                    String displayName = root.path("display_name").asText();
+                    double resLat = root.has("lat") ? root.path("lat").asDouble() : lat;
+                    double resLon = root.has("lon") ? root.path("lon").asDouble() : lon;
+                    String type = root.path("type").asText("location");
+
+                    JsonNode addressNode = root.path("address");
+                    String city = addressNode.path("city").asText(
+                            addressNode.path("town").asText(
+                                    addressNode.path("municipality").asText(
+                                            addressNode.path("village").asText(
+                                                    addressNode.path("suburb").asText("")
+                                            )
+                                    )
+                            )
+                    );
+                    String state = addressNode.path("state").asText("");
+                    String country = addressNode.path("country").asText("");
+
+                    return Optional.of(new LocationSearchDto(placeId, displayName, resLat, resLon, type, city, state, country));
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("Nominatim reverse geocode unavailable for ({}, {}): {}", lat, lon, ex.getMessage());
+        }
+
+        return Optional.empty();
+    }
 }

@@ -18,6 +18,7 @@ import {
   Layers,
   Search,
   Globe,
+  Crosshair,
 } from 'lucide-react';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 
@@ -40,6 +41,9 @@ export const RoutePlannerPage = () => {
     longitude: user?.defaultDepotLng || -122.3995,
   });
   const [depotGeocoding, setDepotGeocoding] = useState(false);
+  const [fetchingLocation, setFetchingLocation] = useState(false);
+  const [locationSuccessMsg, setLocationSuccessMsg] = useState('');
+  const [gpsActive, setGpsActive] = useState(false);
 
   const [roundTrip, setRoundTrip] = useState(true);
   const [endDepot, setEndDepot] = useState({
@@ -152,6 +156,79 @@ export const RoutePlannerPage = () => {
     setPendingOrders((prev) => prev.filter((p) => p.id !== order.id));
   };
 
+  const detectCurrentLocation = (isAutomatic = false) => {
+    if (!navigator.geolocation) {
+      if (!isAutomatic) {
+        setErrorMessage('Geolocation is not supported by your browser.');
+      }
+      return;
+    }
+
+    setFetchingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          const rev = await api.reverseGeocode(latitude, longitude);
+          const resolvedAddress = rev?.displayName || `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+
+          setDepot({
+            address: resolvedAddress,
+            latitude,
+            longitude,
+          });
+
+          // Clean up initial default demo stops if they are still untouched SF stops
+          setStops((prev) => {
+            const hasDefaultSF = prev.length === 3 && prev.some((s) => s.id === 'init-1');
+            return hasDefaultSF ? [] : prev;
+          });
+
+          setRouteResult(null);
+          setGpsActive(true);
+          const summary = (rev?.city ? `${rev.city}, ${rev.country}` : resolvedAddress.split(',').slice(0, 2).join(',')).trim();
+          setLocationSuccessMsg(`📍 Automatically localized depot to your location in ${summary || 'your area'}`);
+          setTimeout(() => setLocationSuccessMsg(''), 7000);
+        } catch (err) {
+          console.warn('Reverse geocoding error:', err);
+          setDepot({
+            address: `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`,
+            latitude,
+            longitude,
+          });
+          setStops((prev) => {
+            const hasDefaultSF = prev.length === 3 && prev.some((s) => s.id === 'init-1');
+            return hasDefaultSF ? [] : prev;
+          });
+          setRouteResult(null);
+          setGpsActive(true);
+          setLocationSuccessMsg(`📍 Depot set to your GPS location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+          setTimeout(() => setLocationSuccessMsg(''), 7000);
+        } finally {
+          setFetchingLocation(false);
+        }
+      },
+      (err) => {
+        setFetchingLocation(false);
+        if (!isAutomatic) {
+          if (err.code === 1) {
+            setErrorMessage('Location permission was denied. Please allow location permissions in your browser or search your address manually.');
+          } else {
+            setErrorMessage(`Could not retrieve location: ${err.message}`);
+          }
+        } else {
+          console.info('Auto geolocation not granted on load:', err.message);
+        }
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+    );
+  };
+
+  useEffect(() => {
+    // Automatically attempt to fetch the user's current GPS location on mount
+    detectCurrentLocation(true);
+  }, []);
+
   const handleGeocodeDepot = async () => {
     if (!depot.address || depot.address.trim().length < 2) return;
     setDepotGeocoding(true);
@@ -165,6 +242,7 @@ export const RoutePlannerPage = () => {
           latitude: top.latitude,
           longitude: top.longitude,
         });
+        setGpsActive(false);
         setRouteResult(null);
       } else {
         setErrorMessage(`Could not geocode depot address "${depot.address}". Try entering a city name or landmark.`);
@@ -183,6 +261,7 @@ export const RoutePlannerPage = () => {
       latitude: preset.latitude,
       longitude: preset.longitude,
     });
+    setGpsActive(false);
     setRouteResult(null);
   };
 
@@ -340,6 +419,21 @@ export const RoutePlannerPage = () => {
       </div>
 
       {/* Success / Error Alerts */}
+      {locationSuccessMsg && (
+        <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-center justify-between shadow-xs">
+          <div className="flex items-center space-x-2.5">
+            <Crosshair className="w-4 h-4 text-blue-600 shrink-0" />
+            <span className="font-semibold">{locationSuccessMsg}</span>
+          </div>
+          <button
+            onClick={() => setLocationSuccessMsg('')}
+            className="text-blue-600 hover:text-blue-800 text-[11px] font-bold ml-2"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {saveSuccess && (
         <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -373,7 +467,14 @@ export const RoutePlannerPage = () => {
                 <MapPin className="w-4 h-4 text-slate-900" />
                 Distribution Depot (Origin)
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 font-mono text-slate-600">Start</span>
+              <div className="flex items-center space-x-1.5">
+                {gpsActive && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live GPS
+                  </span>
+                )}
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 font-mono text-slate-600">Start</span>
+              </div>
             </div>
 
             <div className="text-sm space-y-2">
@@ -381,7 +482,10 @@ export const RoutePlannerPage = () => {
                 <input
                   type="text"
                   value={depot.address}
-                  onChange={(e) => setDepot({ ...depot, address: e.target.value })}
+                  onChange={(e) => {
+                    setDepot({ ...depot, address: e.target.value });
+                    setGpsActive(false);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -391,6 +495,16 @@ export const RoutePlannerPage = () => {
                   className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-600"
                   placeholder="Enter any global city or address"
                 />
+                <button
+                  type="button"
+                  onClick={() => detectCurrentLocation(false)}
+                  disabled={fetchingLocation}
+                  title="Detect my current location automatically"
+                  className="inline-flex items-center space-x-1 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg shrink-0 border border-blue-200 transition-colors"
+                >
+                  <Crosshair className={`w-3.5 h-3.5 ${fetchingLocation ? 'animate-spin text-blue-600' : 'text-blue-600'}`} />
+                  <span>{fetchingLocation ? 'Locating...' : 'Use My GPS'}</span>
+                </button>
                 <button
                   type="button"
                   onClick={handleGeocodeDepot}
@@ -404,13 +518,26 @@ export const RoutePlannerPage = () => {
               {/* Quick Preset Hubs */}
               <div className="flex items-center gap-1.5 flex-wrap pt-1">
                 <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Presets:</span>
+                <button
+                  type="button"
+                  onClick={() => detectCurrentLocation(false)}
+                  disabled={fetchingLocation}
+                  className={`text-[10px] px-2.5 py-0.5 rounded-md font-medium transition-colors flex items-center gap-1 ${
+                    gpsActive
+                      ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                      : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+                  }`}
+                >
+                  <Crosshair className={`w-3 h-3 ${fetchingLocation ? 'animate-spin' : ''}`} />
+                  <span>{fetchingLocation ? 'Fetching...' : 'My Location'}</span>
+                </button>
                 {CITY_PRESETS.map((preset) => (
                   <button
                     key={preset.name}
                     type="button"
                     onClick={() => handleSelectPresetCity(preset)}
                     className={`text-[10px] px-2 py-0.5 rounded-md font-medium transition-colors ${
-                      depot.address.includes(preset.name)
+                      depot.address.includes(preset.name) && !gpsActive
                         ? 'bg-blue-600 text-white font-bold'
                         : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
                     }`}

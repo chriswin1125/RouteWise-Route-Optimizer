@@ -70,6 +70,7 @@ export const api = {
   // Locations
   searchLocations: (query) => request(`/locations/search?q=${encodeURIComponent(query)}`),
   geocodeAddress: (address) => request('/locations/geocode', { method: 'POST', body: JSON.stringify({ address }) }),
+  reverseGeocode: (lat, lon) => request(`/locations/reverse?lat=${lat}&lon=${lon}`),
 
   // Dashboard
   getDashboardSummary: () => request('/dashboard/summary'),

@@ -36,4 +36,11 @@ public class LocationController {
         GeocodeResponse response = locationService.geocode(request);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/reverse")
+    @Operation(summary = "Reverse geocode latitude and longitude into human-readable address")
+    public ResponseEntity<LocationSearchDto> reverseGeocode(@RequestParam double lat, @RequestParam double lon) {
+        LocationSearchDto result = locationService.reverse(lat, lon);
+        return ResponseEntity.ok(result);
+    }
 }

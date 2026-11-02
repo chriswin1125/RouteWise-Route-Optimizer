@@ -34,4 +34,18 @@ public class LocationService {
         LocationSearchDto best = results.get(0);
         return GeocodeResponse.success(best.displayName(), best.latitude(), best.longitude());
     }
+
+    public LocationSearchDto reverse(double lat, double lon) {
+        return nominatimClient.reverseGeocode(lat, lon)
+                .orElseGet(() -> new LocationSearchDto(
+                        "gps-" + System.currentTimeMillis(),
+                        String.format("Current Location (%.4f, %.4f)", lat, lon),
+                        lat,
+                        lon,
+                        "current_location",
+                        "",
+                        "",
+                        ""
+                ));
+    }
 }
