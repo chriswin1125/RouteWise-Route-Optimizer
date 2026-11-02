@@ -3,8 +3,8 @@
 
 INSERT INTO users (id, email, password_hash, full_name, company_name, role, created_at, updated_at)
 VALUES 
-(1, 'demo@routewise.com', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.AQubh4a', 'Sarah Jenkins', 'Metro Courier Express', 'ROLE_USER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(2, 'john.doe@logistics.com', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.AQubh4a', 'John Doe', 'Rapid Delivery Co', 'ROLE_USER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+(1, 'demo@routewise.com', '$2a$10$/y.HSMwE.4EtXk3JRXPPNu3BSCk9AZfrCcFHszGN9rqF7kip48A8q', 'Sarah Jenkins', 'Metro Courier Express', 'ROLE_USER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 'john.doe@logistics.com', '$2a$10$/y.HSMwE.4EtXk3JRXPPNu3BSCk9AZfrCcFHszGN9rqF7kip48A8q', 'John Doe', 'Rapid Delivery Co', 'ROLE_USER', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
 
 -- Reset sequence if needed
