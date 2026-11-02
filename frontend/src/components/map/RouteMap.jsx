@@ -22,20 +22,26 @@ function MapClickHandler({ onMapClick }) {
 }
 
 // Helper component to auto-center & zoom the map closely to fit all markers and lines
-function AutoFitBounds({ points }) {
+function AutoFitBounds({ points, center }) {
   const map = useMap();
 
   useEffect(() => {
-    if (!points || points.length === 0) return;
+    if (!map) return;
     try {
-      const bounds = L.latLngBounds(points);
-      if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [28, 28], maxZoom: 16 });
+      if (points && points.length > 1) {
+        const bounds = L.latLngBounds(points);
+        if (bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [32, 32], maxZoom: 16 });
+        }
+      } else if (points && points.length === 1) {
+        map.setView(points[0], 14, { animate: true });
+      } else if (center && center[0] != null && center[1] != null) {
+        map.setView(center, 14, { animate: true });
       }
     } catch (e) {
-      console.warn('Could not fit map bounds:', e);
+      console.warn('Could not update map view:', e);
     }
-  }, [points, map]);
+  }, [points, center, map]);
 
   return null;
 }
@@ -168,7 +174,7 @@ export const RouteMap = ({
 
         {onMapClick && <MapClickHandler onMapClick={onMapClick} />}
 
-        <AutoFitBounds points={allFitPoints} />
+        <AutoFitBounds points={allFitPoints} center={center} />
 
         {/* Baseline (Original) Polyline - Dashed Amber */}
         {parsedBaselinePolyline.length > 0 && (

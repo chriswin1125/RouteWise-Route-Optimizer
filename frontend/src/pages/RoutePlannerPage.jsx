@@ -537,7 +537,7 @@ export const RoutePlannerPage = () => {
                     type="button"
                     onClick={() => handleSelectPresetCity(preset)}
                     className={`text-[10px] px-2 py-0.5 rounded-md font-medium transition-colors ${
-                      depot.address.includes(preset.name) && !gpsActive
+                      Boolean(depot?.address && depot.address.includes(preset.name)) && !gpsActive
                         ? 'bg-blue-600 text-white font-bold'
                         : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
                     }`}
@@ -548,7 +548,7 @@ export const RoutePlannerPage = () => {
               </div>
 
               <div className="text-[11px] text-slate-400 flex items-center justify-between">
-                <span>Lat: {depot.latitude?.toFixed(4)}, Lng: {depot.longitude?.toFixed(4)}</span>
+                <span>Lat: {depot?.latitude != null ? Number(depot.latitude).toFixed(4) : '—'}, Lng: {depot?.longitude != null ? Number(depot.longitude).toFixed(4) : '—'}</span>
                 <span className="text-emerald-600 font-medium flex items-center gap-1">
                   <Globe className="w-3 h-3" /> Global GPS
                 </span>
