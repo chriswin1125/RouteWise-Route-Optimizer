@@ -1,6 +1,30 @@
 @import "tailwindcss";
 
 @layer base {
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Responsive screen zoom scaling: zoom in proportionally on laptops and large desktops */
+  @media (min-width: 1280px) {
+    html {
+      font-size: 16.5px;
+    }
+  }
+
+  @media (min-width: 1536px) {
+    html {
+      font-size: 17.5px;
+    }
+  }
+
+  @media (min-width: 1920px) {
+    html {
+      font-size: 18.5px;
+    }
+  }
+
   body {
     @apply antialiased bg-slate-50 text-slate-900;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -11,8 +35,9 @@
 .leaflet-container {
   width: 100%;
   height: 100%;
-  border-radius: 0.75rem;
+  border-radius: 0.85rem;
   z-index: 10;
+  font-family: inherit;
 }
 
 /* Custom Marker Pin Styles */
@@ -24,9 +49,9 @@
   color: #38bdf8;
   border: 2px solid #ffffff;
   border-radius: 9999px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.35);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .custom-stop-pin {
@@ -37,9 +62,9 @@
   color: #ffffff;
   border: 2px solid #ffffff;
   border-radius: 9999px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.3);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .custom-end-pin {
@@ -50,7 +75,7 @@
   color: #ffffff;
   border: 2px solid #ffffff;
   border-radius: 9999px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.35);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
 }

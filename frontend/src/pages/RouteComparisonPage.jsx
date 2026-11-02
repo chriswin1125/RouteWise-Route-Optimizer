@@ -217,7 +217,7 @@ export const RouteComparisonPage = () => {
                   stops={comparison.optimizedRoute?.stops || stops}
                   routeGeometry={comparison.optimizedRoute?.routeGeometry}
                   baselineGeometry={comparison.baselineRoute?.routeGeometry}
-                  height="450px"
+                  height="540px"
                 />
               </div>
 

@@ -556,7 +556,7 @@ export const RoutePlannerPage = () => {
               endDepot={!roundTrip && endDepot.latitude ? endDepot : null}
               stops={stops}
               routeGeometry={routeResult?.routeGeometry}
-              height="530px"
+              height="620px"
             />
           </div>
         </div>

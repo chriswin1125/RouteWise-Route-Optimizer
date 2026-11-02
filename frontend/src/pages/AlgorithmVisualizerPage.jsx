@@ -271,7 +271,7 @@ export const AlgorithmVisualizerPage = () => {
           </div>
 
           {/* Render Graph SVG */}
-          <div className="w-full h-[400px] flex items-center justify-center relative overflow-hidden bg-slate-50/50 rounded-xl mt-2 border border-slate-100">
+          <div className="w-full h-[480px] lg:h-[540px] flex items-center justify-center relative overflow-hidden bg-slate-50/50 rounded-xl mt-2 border border-slate-100">
             {graphData && (
               <svg viewBox="0 0 800 500" className="w-full h-full">
                 {/* Edges */}

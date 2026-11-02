@@ -10,7 +10,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Helper component to auto-center & zoom the map to fit all markers and lines
+// Helper component to auto-center & zoom the map closely to fit all markers and lines
 function AutoFitBounds({ points }) {
   const map = useMap();
 
@@ -19,7 +19,7 @@ function AutoFitBounds({ points }) {
     try {
       const bounds = L.latLngBounds(points);
       if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+        map.fitBounds(bounds, { padding: [28, 28], maxZoom: 16 });
       }
     } catch (e) {
       console.warn('Could not fit map bounds:', e);
@@ -37,23 +37,23 @@ const createNumberedIcon = (number, color = '#2563eb') => {
       <div style="
         background-color: ${color};
         color: #ffffff;
-        width: 28px;
-        height: 28px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 700;
-        font-size: 12px;
-        border: 2px solid #ffffff;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        font-weight: 800;
+        font-size: 13px;
+        border: 2.5px solid #ffffff;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.35);
       ">
         ${number}
       </div>
     `,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-    popupAnchor: [0, -14],
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
   });
 };
 
@@ -66,24 +66,24 @@ const createDepotIcon = (isEnd = false) => {
       <div style="
         background-color: ${color};
         color: #38bdf8;
-        padding: 2px 6px;
-        height: 26px;
-        border-radius: 6px;
+        padding: 3px 8px;
+        height: 28px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 800;
-        font-size: 11px;
-        letter-spacing: 0.5px;
+        font-size: 12px;
+        letter-spacing: 0.6px;
         border: 2px solid #ffffff;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.35);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.4);
       ">
         ${label}
       </div>
     `,
-    iconSize: [40, 26],
-    iconAnchor: [20, 13],
-    popupAnchor: [0, -13],
+    iconSize: [46, 28],
+    iconAnchor: [23, 14],
+    popupAnchor: [0, -14],
   });
 };
 
@@ -93,7 +93,7 @@ export const RouteMap = ({
   stops = [],
   routeGeometry = null,
   baselineGeometry = null,
-  height = '500px',
+  height = '560px',
   interactive = true,
 }) => {
   // Center default: San Francisco
@@ -141,10 +141,10 @@ export const RouteMap = ({
   }
 
   return (
-    <div style={{ height }} className="w-full relative rounded-xl overflow-hidden shadow-inner border border-slate-200">
+    <div style={{ height }} className="w-full relative rounded-2xl overflow-hidden shadow-inner border border-slate-200">
       <MapContainer
         center={center}
-        zoom={13}
+        zoom={14}
         scrollWheelZoom={interactive}
         dragging={interactive}
         className="w-full h-full"
@@ -156,19 +156,19 @@ export const RouteMap = ({
 
         <AutoFitBounds points={allFitPoints} />
 
-        {/* Baseline (Original) Polyline - Dashed Gray/Amber */}
+        {/* Baseline (Original) Polyline - Dashed Amber */}
         {parsedBaselinePolyline.length > 0 && (
           <Polyline
             positions={parsedBaselinePolyline}
-            pathOptions={{ color: '#f59e0b', weight: 3, dashArray: '6, 8', opacity: 0.8 }}
+            pathOptions={{ color: '#f59e0b', weight: 3.5, dashArray: '6, 8', opacity: 0.85 }}
           />
         )}
 
-        {/* Optimized Road Polyline - Solid Blue */}
+        {/* Optimized Road Polyline - Solid Vibrant Blue */}
         {parsedPolyline.length > 0 && (
           <Polyline
             positions={parsedPolyline}
-            pathOptions={{ color: '#2563eb', weight: 4.5, opacity: 0.9 }}
+            pathOptions={{ color: '#2563eb', weight: 5, opacity: 0.95 }}
           />
         )}
 
