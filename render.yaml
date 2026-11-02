@@ -1,0 +1,48 @@
+services:
+  # RouteWise Spring Boot Backend Service
+  - type: web
+    name: routewise-backend
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: free
+    region: oregon
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: postgres
+      - key: PGHOST
+        fromDatabase:
+          name: routewisedb
+          property: host
+      - key: PGPORT
+        fromDatabase:
+          name: routewisedb
+          property: port
+      - key: PGDATABASE
+        fromDatabase:
+          name: routewisedb
+          property: database
+      - key: PGUSER
+        fromDatabase:
+          name: routewisedb
+          property: user
+      - key: PGPASSWORD
+        fromDatabase:
+          name: routewisedb
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION_MS
+        value: 86400000
+      - key: OSRM_URL
+        value: https://router.project-osrm.org
+      - key: NOMINATIM_URL
+        value: https://nominatim.openstreetmap.org
+
+databases:
+  # RouteWise Managed PostgreSQL Database
+  - name: routewisedb
+    databaseName: routewisedb
+    user: postgres
+    plan: free
+    region: oregon
