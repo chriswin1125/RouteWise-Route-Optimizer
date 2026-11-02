@@ -115,6 +115,7 @@ public class NominatimClient {
             }
         }
 
-        return matches.isEmpty() ? CURATED_LOCATIONS.subList(0, Math.min(5, CURATED_LOCATIONS.size())) : matches;
+        // Return matching curated locations if any, otherwise empty list
+        return matches;
     }
 }

@@ -17,8 +17,18 @@ import {
   Clock,
   Layers,
   Search,
+  Globe,
 } from 'lucide-react';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
+
+const CITY_PRESETS = [
+  { name: 'San Francisco', address: 'Central Hub, 500 Howard St, San Francisco, CA', latitude: 37.7885, longitude: -122.3995 },
+  { name: 'New York', address: 'Times Square Hub, 350 5th Ave, New York, NY', latitude: 40.7484, longitude: -73.9857 },
+  { name: 'London', address: 'London Central Depot, 100 Victoria Embankment, London, UK', latitude: 51.5113, longitude: -0.1062 },
+  { name: 'Paris', address: 'Paris Logistics Hub, Place de la République, Paris, France', latitude: 48.8675, longitude: 2.3638 },
+  { name: 'Tokyo', address: 'Tokyo Central Terminal, Marunouchi, Chiyoda, Tokyo, Japan', latitude: 35.6812, longitude: 139.7671 },
+  { name: 'Bengaluru', address: 'Bengaluru Freight Hub, MG Road, Bengaluru, India', latitude: 12.9716, longitude: 77.5946 },
+];
 
 export const RoutePlannerPage = () => {
   const { user } = useAuth();
@@ -29,6 +39,7 @@ export const RoutePlannerPage = () => {
     latitude: user?.defaultDepotLat || 37.7885,
     longitude: user?.defaultDepotLng || -122.3995,
   });
+  const [depotGeocoding, setDepotGeocoding] = useState(false);
 
   const [roundTrip, setRoundTrip] = useState(true);
   const [endDepot, setEndDepot] = useState({
@@ -139,6 +150,57 @@ export const RoutePlannerPage = () => {
     };
     setStops((prev) => [...prev, newStop]);
     setPendingOrders((prev) => prev.filter((p) => p.id !== order.id));
+  };
+
+  const handleGeocodeDepot = async () => {
+    if (!depot.address || depot.address.trim().length < 2) return;
+    setDepotGeocoding(true);
+    setErrorMessage('');
+    try {
+      const results = await api.searchLocations(depot.address);
+      if (results && results.length > 0) {
+        const top = results[0];
+        setDepot({
+          address: top.displayName,
+          latitude: top.latitude,
+          longitude: top.longitude,
+        });
+        setRouteResult(null);
+      } else {
+        setErrorMessage(`Could not geocode depot address "${depot.address}". Try entering a city name or landmark.`);
+      }
+    } catch (err) {
+      console.error('Depot geocoding failed:', err);
+      setErrorMessage('Depot geocoding failed: ' + err.message);
+    } finally {
+      setDepotGeocoding(false);
+    }
+  };
+
+  const handleSelectPresetCity = (preset) => {
+    setDepot({
+      address: preset.address,
+      latitude: preset.latitude,
+      longitude: preset.longitude,
+    });
+    setRouteResult(null);
+  };
+
+  const handleClearAllStops = () => {
+    setStops([]);
+    setRouteResult(null);
+  };
+
+  const handleMapClick = (latlng) => {
+    const newStop = {
+      id: `map-${Date.now()}`,
+      customerName: `Delivery Stop #${stops.length + 1}`,
+      address: `Pin at ${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`,
+      latitude: latlng.lat,
+      longitude: latlng.lng,
+    };
+    setStops((prev) => [...prev, newStop]);
+    setRouteResult(null);
   };
 
   const handleRemoveStop = (index) => {
@@ -314,17 +376,55 @@ export const RoutePlannerPage = () => {
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 font-mono text-slate-600">Start</span>
             </div>
 
-            <div className="text-sm">
-              <input
-                type="text"
-                value={depot.address}
-                onChange={(e) => setDepot({ ...depot, address: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 font-medium"
-                placeholder="Enter starting depot address"
-              />
-              <div className="text-[11px] text-slate-400 mt-1 flex gap-2">
-                <span>Lat: {depot.latitude?.toFixed(4)}</span>
-                <span>Lng: {depot.longitude?.toFixed(4)}</span>
+            <div className="text-sm space-y-2">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={depot.address}
+                  onChange={(e) => setDepot({ ...depot, address: e.target.value })}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleGeocodeDepot();
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  placeholder="Enter any global city or address"
+                />
+                <button
+                  type="button"
+                  onClick={handleGeocodeDepot}
+                  disabled={depotGeocoding}
+                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg shrink-0 transition-colors"
+                >
+                  {depotGeocoding ? 'Locating...' : 'Locate Hub'}
+                </button>
+              </div>
+
+              {/* Quick Preset Hubs */}
+              <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Presets:</span>
+                {CITY_PRESETS.map((preset) => (
+                  <button
+                    key={preset.name}
+                    type="button"
+                    onClick={() => handleSelectPresetCity(preset)}
+                    className={`text-[10px] px-2 py-0.5 rounded-md font-medium transition-colors ${
+                      depot.address.includes(preset.name)
+                        ? 'bg-blue-600 text-white font-bold'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                    }`}
+                  >
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+
+              <div className="text-[11px] text-slate-400 flex items-center justify-between">
+                <span>Lat: {depot.latitude?.toFixed(4)}, Lng: {depot.longitude?.toFixed(4)}</span>
+                <span className="text-emerald-600 font-medium flex items-center gap-1">
+                  <Globe className="w-3 h-3" /> Global GPS
+                </span>
               </div>
             </div>
 
@@ -387,11 +487,22 @@ export const RoutePlannerPage = () => {
               <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
                 Delivery Stops ({stops.length})
               </span>
-              {pendingOrders.length > 0 && (
-                <span className="text-[11px] text-blue-600 font-medium">
-                  {pendingOrders.length} pending orders ready
-                </span>
-              )}
+              <div className="flex items-center space-x-2">
+                {stops.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearAllStops}
+                    className="text-[11px] text-red-600 hover:text-red-700 font-semibold px-2 py-0.5 rounded hover:bg-red-50 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                )}
+                {pendingOrders.length > 0 && (
+                  <span className="text-[11px] text-blue-600 font-medium">
+                    {pendingOrders.length} pending orders ready
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Address Search Autocomplete Input */}
@@ -453,50 +564,60 @@ export const RoutePlannerPage = () => {
             )}
 
             {/* Ordered Stop List */}
-            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-              {stops.map((stop, index) => (
-                <div
-                  key={stop.id || index}
-                  className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80 hover:border-slate-300 transition-colors text-xs"
-                >
-                  <div className="flex items-center space-x-2.5 min-w-0">
-                    <span className="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0">
-                      {index + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-bold text-slate-800 truncate">{stop.customerName || `Stop ${index + 1}`}</p>
-                      <p className="text-[11px] text-slate-500 truncate">{stop.address}</p>
+            {stops.length === 0 ? (
+              <div className="p-6 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 space-y-2">
+                <Globe className="w-8 h-8 text-blue-500/70 mx-auto" />
+                <p className="text-xs font-bold text-slate-800">No Delivery Stops Added</p>
+                <p className="text-[11px] text-slate-500 max-w-xs mx-auto leading-relaxed">
+                  Search any address globally in the search box above, or <strong>click directly on the map</strong> to place stops anywhere in the world!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                {stops.map((stop, index) => (
+                  <div
+                    key={stop.id || index}
+                    className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80 hover:border-slate-300 transition-colors text-xs"
+                  >
+                    <div className="flex items-center space-x-2.5 min-w-0">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0">
+                        {index + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-800 truncate">{stop.customerName || `Stop ${index + 1}`}</p>
+                        <p className="text-[11px] text-slate-500 truncate">{stop.address}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-1 shrink-0 ml-2">
+                      <button
+                        onClick={() => handleMoveStop(index, -1)}
+                        disabled={index === 0}
+                        className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 rounded"
+                        title="Move Up"
+                      >
+                        &uarr;
+                      </button>
+                      <button
+                        onClick={() => handleMoveStop(index, 1)}
+                        disabled={index === stops.length - 1}
+                        className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 rounded"
+                        title="Move Down"
+                      >
+                        &darr;
+                      </button>
+                      <button
+                        onClick={() => handleRemoveStop(index)}
+                        className="p-1 text-slate-400 hover:text-red-600 rounded ml-1"
+                        title="Remove Stop"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
-
-                  <div className="flex items-center space-x-1 shrink-0 ml-2">
-                    <button
-                      onClick={() => handleMoveStop(index, -1)}
-                      disabled={index === 0}
-                      className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 rounded"
-                      title="Move Up"
-                    >
-                      &uarr;
-                    </button>
-                    <button
-                      onClick={() => handleMoveStop(index, 1)}
-                      disabled={index === stops.length - 1}
-                      className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 rounded"
-                      title="Move Down"
-                    >
-                      &darr;
-                    </button>
-                    <button
-                      onClick={() => handleRemoveStop(index)}
-                      className="p-1 text-slate-400 hover:text-red-600 rounded ml-1"
-                      title="Remove Stop"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -550,12 +671,22 @@ export const RoutePlannerPage = () => {
           )}
 
           {/* Interactive Map */}
-          <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+            <div className="flex items-center justify-between px-1 text-xs text-slate-500">
+              <span className="flex items-center gap-1.5 font-medium text-slate-700">
+                <Globe className="w-3.5 h-3.5 text-blue-600" />
+                Global Interactive Map &bull; Click anywhere on map to drop stops
+              </span>
+              <span className="text-[11px] text-slate-400 font-mono">
+                {stops.length} stop{stops.length !== 1 ? 's' : ''} mapped
+              </span>
+            </div>
             <RouteMap
               depot={depot}
               endDepot={!roundTrip && endDepot.latitude ? endDepot : null}
               stops={stops}
               routeGeometry={routeResult?.routeGeometry}
+              onMapClick={handleMapClick}
               height="620px"
             />
           </div>

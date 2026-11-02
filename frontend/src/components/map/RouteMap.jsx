@@ -1,5 +1,4 @@
-import React, { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 
 // Fix for default Leaflet icon assets
@@ -9,6 +8,18 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
+
+// Helper component to capture map click events for interactive point placement
+function MapClickHandler({ onMapClick }) {
+  useMapEvents({
+    click(e) {
+      if (onMapClick) {
+        onMapClick(e.latlng);
+      }
+    },
+  });
+  return null;
+}
 
 // Helper component to auto-center & zoom the map closely to fit all markers and lines
 function AutoFitBounds({ points }) {
@@ -95,6 +106,7 @@ export const RouteMap = ({
   baselineGeometry = null,
   height = '560px',
   interactive = true,
+  onMapClick = null,
 }) => {
   // Center default: San Francisco
   const defaultCenter = [37.7749, -122.4194];
@@ -153,6 +165,8 @@ export const RouteMap = ({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
+        {onMapClick && <MapClickHandler onMapClick={onMapClick} />}
 
         <AutoFitBounds points={allFitPoints} />
 
