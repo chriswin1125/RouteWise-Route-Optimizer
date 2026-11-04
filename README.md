@@ -1,20 +1,39 @@
 # RouteWise — Intelligent Route Optimization System
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-routewise--optimizer.vercel.app-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://routewise-optimizer.vercel.app)
+[![Backend API](https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://routewise-route-optimizer.onrender.com)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/chriswin1125/RouteWise-Route-Optimizer)
+
+🌐 **Live Application**: [https://routewise-optimizer.vercel.app](https://routewise-optimizer.vercel.app)  
+🚀 **Backend Service**: [https://routewise-route-optimizer.onrender.com](https://routewise-route-optimizer.onrender.com)  
+📖 **API Docs (Swagger)**: [https://routewise-route-optimizer.onrender.com/swagger-ui.html](https://routewise-route-optimizer.onrender.com/swagger-ui.html)
+
 > **RouteWise** is a production-grade, full-stack logistics route planning and multi-stop optimization platform engineered with **Java 21, Spring Boot 3, PostgreSQL, React (Vite + Tailwind CSS), Leaflet, and Recharts**. It solves the Traveling Salesperson Problem (TSP) using 2-Opt local search heuristics and exact dynamic programming (Held-Karp), computes shortest paths with Dijkstra and A*, and integrates real-world road network routing via OpenStreetMap and OSRM.
 
 ---
 
+## Live Deployments
+
+| Component | Platform | URL | Status |
+|---|---|---|---|
+| **Frontend Web App** | **Vercel** | [https://routewise-optimizer.vercel.app](https://routewise-optimizer.vercel.app) | Production |
+| **Backend API** | **Render** | [https://routewise-route-optimizer.onrender.com](https://routewise-route-optimizer.onrender.com) | Production |
+| **Interactive API Docs** | **Swagger UI** | [https://routewise-route-optimizer.onrender.com/swagger-ui.html](https://routewise-route-optimizer.onrender.com/swagger-ui.html) | Available |
+
+---
+
 ## Table of Contents
-1. [System Architecture](#system-architecture)
-2. [Key Features](#key-features)
-3. [Technology Stack](#technology-stack)
-4. [Mathematical Algorithms & Complexity](#mathematical-algorithms--complexity)
-5. [Database Schema (Flyway Migrations)](#database-schema)
-6. [API Endpoints Reference](#api-endpoints-reference)
-7. [Getting Started (Local & Docker)](#getting-started)
-8. [Automated Verification & Testing](#automated-verification--testing)
-9. [Example API Request & Response](#example-api-request--response)
-10. [Default Credentials & Development Dataset](#default-credentials)
+1. [Live Deployments](#live-deployments)
+2. [System Architecture](#system-architecture)
+3. [Key Features](#key-features)
+4. [Technology Stack](#technology-stack)
+5. [Mathematical Algorithms & Complexity](#mathematical-algorithms--complexity)
+6. [Database Schema (Flyway Migrations)](#database-schema)
+7. [API Endpoints Reference](#api-endpoints-reference)
+8. [Getting Started (Local & Docker)](#getting-started)
+9. [Automated Verification & Testing](#automated-verification--testing)
+10. [Example API Request & Response](#example-api-request--response)
+11. [Default Credentials & Development Dataset](#default-credentials)
 
 ---
 
